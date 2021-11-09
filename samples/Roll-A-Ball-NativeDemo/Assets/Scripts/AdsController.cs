@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2015 Google, Inc.
+// Copyright (C) 2015 Google, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,34 +23,22 @@ using UnityEngine;
 /// </summary>
 public class AdsController : MonoBehaviour
 {
-    /// A test ad unit for custom native template ads.
+    /// A test ad unit for custom native ads.
     public const string AdUnitId = "/6499/example/unity-custom-native";
-    public const string TemplateId = "10085730";
+    public const string FormatId = "10085730";
     public Material GroundTextMaterial;
     public Material ErrorTextMaterial;
     public Font TextFont;
 
     private bool nativeAdLoaded;
-    private CustomNativeTemplateAd nativeAd;
+    private CustomNativeAd nativeAd;
     private GameObject errorMessage1;
     private GameObject errorMessage2;
 
     public void Start()
     {
-
-#if UNITY_ANDROID
-        string appId = "ca-app-pub-3940256099942544~3347511713";
-#elif UNITY_IPHONE
-        string appId = "ca-app-pub-3940256099942544~1458002511";
-#else
-        string appId = "unexpected_platform";
-#endif
-
         // Initialize the Google Mobile Ads SDK.
-        MobileAds.Initialize(appId);
-
-        this.nativeAdLoaded = false;
-        this.RequestNativeAd();
+        MobileAds.Initialize(HandleInitCompleteAction);
     }
 
     public void Update()
@@ -141,24 +129,34 @@ public class AdsController : MonoBehaviour
     }
 
     /// <summary>
-    /// Requests a CustomNativeTemplateAd.
+    /// Called by MobileAds when initialization is completed.
+    /// </summary>
+    private void HandleInitCompleteAction(InitializationStatus initstatus)
+    {
+        MonoBehaviour.print("Initialization complete");
+        this.nativeAdLoaded = false;
+        this.RequestNativeAd();
+    }
+
+    /// <summary>
+    /// Requests a CustomNativeAd.
     /// </summary>
     private void RequestNativeAd()
     {
         AdLoader adLoader = new AdLoader.Builder(AdUnitId)
-            .ForCustomNativeAd(TemplateId)
+            .ForCustomNativeAd(FormatId)
             .Build();
-        adLoader.OnCustomNativeTemplateAdLoaded += this.HandleCustomNativeAdLoaded;
+        adLoader.OnCustomNativeAdLoaded += this.HandleCustomNativeAdLoaded;
         adLoader.OnAdFailedToLoad += this.HandleNativeAdFailedToLoad;
         adLoader.LoadAd(new AdRequest.Builder().Build());
     }
 
     /// <summary>
-    /// Handles the ad event corresponding to a CustomNativeTemplateAd succesfully loading.
+    /// Handles the ad event corresponding to a CustomNativeAd successfully loading.
     /// </summary>
     /// <param name="sender">Sender.</param>
-    /// <param name="args">EventArgs wrapper for CustomNativeTemplateAd that loaded.</param>
-    private void HandleCustomNativeAdLoaded(object sender, CustomNativeEventArgs args)
+    /// <param name="args">EventArgs wrapper for CustomNativeAd that loaded.</param>
+    private void HandleCustomNativeAdLoaded(object sender, CustomNativeAdEventArgs args)
     {
         this.nativeAd = args.nativeAd;
         this.nativeAdLoaded = true;
@@ -189,6 +187,7 @@ public class AdsController : MonoBehaviour
                     errorTextOffset);
         }
 
-        MonoBehaviour.print("Ad Loader fail event received with message: " + args.Message);
+        string message = args.LoadAdError.GetMessage();
+        MonoBehaviour.print("Ad Loader fail event received with message: " + message);
     }
 }
